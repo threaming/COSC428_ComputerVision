@@ -1,0 +1,7 @@
+opencv-python
+numpy
+open3d
+pytesseract
+pyrealsense2
+
+git+https://github.com/SamDSchofield/t3d_visualiser@main#egg=t3d_visualiser

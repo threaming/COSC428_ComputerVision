@@ -1,0 +1,16 @@
+env/
+__pycache__/
+build/
+*.py[cod]
+*.egg/
+*.egg-info/
+.vscode/
+*.pth.tar
+
+*.pyc
+.torch
+_ext
+*.o
+work
+work/*
+_ext/

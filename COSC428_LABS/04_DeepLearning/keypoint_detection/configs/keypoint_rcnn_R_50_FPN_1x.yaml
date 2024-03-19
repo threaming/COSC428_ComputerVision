@@ -1,0 +1,5 @@
+_BASE_: "./Base-Keypoint-RCNN-FPN.yaml"
+MODEL:
+  WEIGHTS: "./keypoint_detection/weights/model_final_04e291.pkl"
+  RESNETS:
+    DEPTH: 50
