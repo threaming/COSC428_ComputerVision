@@ -157,6 +157,16 @@ The conclusion goes here.
 
 <!-- conference papers do not normally have an appendix -->
 
+# Methods
+
+|        | Version  | Col3 |
+|--------|----------|------|
+| OpenCV | 4.9.0.80 |      |
+| numpy  | 1.20     |      |
+|        |          |      |
+
+: Development platform specification
+
 # Acknowledgment {#acknowledgment}
 
 The authors would like to thank...
