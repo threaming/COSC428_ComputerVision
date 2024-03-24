@@ -27,7 +27,7 @@ affiliation:
         - name: Richard Green
           email: richard.green@canterbury.ac.nz
 
-fig-pos: H
+#fig-pos: H
 
 abstract: |
   Lorem ipsum dolor sit amet, consectetur adipiscing elit. In hoc documento, ego praesento innovativum AI-driven methodum ad obtinendum altum praecisum tridimensionalibus (3D) reconstructiones ex imagines volatus deserto vehiculorum (UAV). Perhibeo leveraging incisivum artificiosum intelligentiae (AI) technicas, maxime profunda discentibus algorithmis, meus accedo cito augeo veritas 3D reconstructiones acquirentibus ab UAV imagines. Fundamentum meum novitatum requiesco in emendatio UAV positiones data per fusionem sensorum et machina discens-based localization methodum. Per communio informationis ex diversis auctis sensibus ut GPS, IMU, et visual odometry, meus AI-driven modus magna ex parte accendo integram positiones veritas, consequenter augeo magis exacter 3D reconstructiones. Perampla experimentalis evaluationes acta in realis-mundi datasets confirmo efficacia et superioritatem meus propono AI-driven methodologia supra praesentia aditus. Hic investigatio significantem profectus facio in UAV-based 3D reconstruction, cum latissimus implicationes ad applications districtum ambientis explorationem, urbana consilium, et inspectionem infrastructure.
@@ -39,11 +39,11 @@ numbersections: true
 
 # Introduction
 
-To overcome the up to 56% increase in food demand by 2050, serious measures have to be applied, as current crop production is insufficient to lower the risk of hunger. Additionally an overall more stable crop production, able to deal with pests, pathogens, heat waves and other climate change induced weather extremes, must be achieved @vandijk2021 . A key point of breeding new resilient crops are double haploidy, genomics-assisted breeding, breeding data management and high-throughput and precise phenotyping @prasanna2021 @araus2018 . Expecially the latter has developed significantly with the wider spread and higher affordability of deep learning. Unmaned areal vehicles (UAV) - drones are used in agriculture for pesticide spraying and crop monitoring. Equipted with various sensors and cameras of different spectra make drones a useful tool for crop monitoring, either for pesticide spraying, fertilizer estimation or crop monitoring. @mogili2018
+To overcome the up to 56% increase in food demand by 2050, serious measures have to be applied, as current crop production is insufficient to lower the risk of hunger. Additionally an overall more stable crop production, able to deal with pests, pathogens, heat waves and other climate change induced weather extremes, must be achieved [@vandijk2021]. A key point of breeding new resilient crops are double haploidy, genomics-assisted breeding, breeding data management and high-throughput and precise phenotyping [@prasanna2021; @araus2018]. Expecially the latter has developed significantly with the wider spread and higher affordability of deep learning. Unmaned areal vehicles (UAV) - drones are used in agriculture for pesticide spraying and crop monitoring. Equipted with various sensors and cameras of different spectra make drones a useful tool for crop monitoring, either for pesticide spraying, fertilizer estimation or crop monitoring. [@mogili2018]
 
-![Examples of potential applications of field phenotyping with RGB-Images. Different phenotyping needs in respect to the corresponding pheneological stage. @araus2018](img/pheneostages.jpg){#fig-pheneostages}
+![Examples of potential applications of field phenotyping with RGB-Images. Different phenotyping needs in respect to the corresponding pheneological stage. [@araus2018]](img/pheneostages.jpg){#fig-pheneostages width="8cm" height="11.5cm"}
 
-In plant phenotyping specifically there is a need in the accurate capture of individual plants, or the recording of individual characteristics depending on the phonological stage of a plant (see @fig-pheneostages) @araus2018 . Drones seam to be especially useful for this task, based on the low price and ease of use. If needed, drones can be combined with ground robots to capture more data from angles obstructed for the drone (e.g. under the canopy) @gao2021 . As 3D reconstruction is a important part of phenotyping and, if accurate enough, can act as a new base for algorithms to work out other plant details.
+In plant phenotyping specifically there is a need in the accurate capture of individual plants, or the recording of individual characteristics depending on the phonological stage of a plant (see @fig-pheneostages) [@araus2018]. Drones seam to be especially useful for this task, based on the low price and ease of use. If needed, drones can be combined with ground robots to capture more data from angles obstructed for the drone (e.g. under the canopy) [@gao2021]. As 3D reconstruction is a important part of phenotyping and, if accurate enough, can act as a new base for algorithms to work out other plant details.
 
 # Background
 
@@ -62,8 +62,6 @@ The conclusion goes here.
 The authors would like to thank...
 
 # Bibliography styles
-
-Here are two sample references: [@Feynman1963118; @Dirac1953888].
 
 \newpage
 
