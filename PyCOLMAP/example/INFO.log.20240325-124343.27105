@@ -1,0 +1,6 @@
+Log file created at: 2024/03/25 12:43:43
+Running on machine: cs23045jv
+Running duration (h:mm:ss): 0:00:00
+Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I20240325 12:43:43.693359 27105 example.py:run:25] Downloading the data.
+I20240325 12:44:35.365595 27105 example.py:run:30] Data extracted to example.
