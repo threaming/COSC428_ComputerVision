@@ -1,8 +1,8 @@
 ---
-title: Precise 3D Reconstruction from UAV Images with Improved Positioning
+title: 3D Reconstruction from UAV Images for Plant Phenotyping
 format:
   ieee-conference-pdf:
-    keep-tex: false
+    keep-tex: true
     output-file: "Andreas Ming_58736084"
 affiliation:
   ## Author mode :  use one only of the following --- +
@@ -39,14 +39,72 @@ numbersections: true
 
 # Introduction
 
-To overcome the up to 56% increase in food demand by 2050, serious measures have to be applied, as current crop production is insufficient to lower the risk of hunger. Additionally an overall more stable crop production, able to deal with pests, pathogens, heat waves and other climate change induced weather extremes, must be achieved [@vandijk2021]. A key point of breeding new resilient crops are double haploidy, genomics-assisted breeding, breeding data management and high-throughput and precise phenotyping [@prasanna2021; @araus2018]. Expecially the latter has developed significantly with the wider spread and higher affordability of deep learning. Unmaned areal vehicles (UAV) - drones are used in agriculture for pesticide spraying and crop monitoring. Equipted with various sensors and cameras of different spectra make drones a useful tool for crop monitoring, either for pesticide spraying, fertilizer estimation or crop monitoring. [@mogili2018]
+To overcome the up to 56% increase in food demand by 2050, serious measures have to be applied, as current crop production is insufficient to lower the risk of hunger. Furthermore an overall more stable crop production, able to deal with pests, pathogens, heat waves and other climate change induced weather extremes, must be achieved [@vandijk2021]. A key point of breeding new resilient crops are double haploidy, genomics-assisted breeding, breeding data management and high-throughput and precise phenotyping [@prasanna2021; @araus2018]. Expecially the latter has developed significantly with the wider spread and higher affordability of deep learning. Unmanned areal vehicles (UAV) - drones are used in agriculture for pesticide spraying and crop monitoring. Equipted with various sensors and cameras of different spectra, drones are a useful tool for crop monitoring, either for pesticide spraying, fertilizer estimation or crop monitoring. [@mogili2018]
 
-![Examples of potential applications of field phenotyping with RGB-Images. Different phenotyping needs in respect to the corresponding pheneological stage. [@araus2018]](img/pheneostages.jpg){#fig-pheneostages width="8cm" height="11.5cm"}
+![Examples of potential applications of field phenotyping with RGB-Images. Different phenotyping needs in respect to the corresponding pheneological stage. [@araus2018]](images/pheneostages.jpg){#fig-pheneostages width="8cm" height="11.5cm"}
 
-In plant phenotyping specifically there is a need in the accurate capture of individual plants, or the recording of individual characteristics depending on the phonological stage of a plant (see @fig-pheneostages) [@araus2018]. Drones seam to be especially useful for this task, based on the low price and ease of use. If needed, drones can be combined with ground robots to capture more data from angles obstructed for the drone (e.g. under the canopy) [@gao2021]. As 3D reconstruction is a important part of phenotyping and, if accurate enough, can act as a new base for algorithms to work out other plant details.
+In plant phenotyping specifically there is a need in the accurate capture of individual plants, or the recording of individual characteristics depending on the phonological stage of a plant (see @fig-pheneostages) [@araus2018]. Drones seam to be especially useful for this task, based on the low price and ease of use [@guo2021]. If needed, drones can be combined with ground robots to capture more data from angles obstructed for the drone (e.g. under the canopy) [@gao2021]. As 3D reconstruction is a important part of phenotyping and, if accurate enough, can act as a new base for algorithms to work out other plant details, we propose Structure from Motion (SfM) algorithms and quantify their accuracy.
+
+For for 3D reconstruction COLMAP [@schönberger2024] is used, which applies pixelwise view selection [@schönberger2016; @schönberger2016a]. A comparison with a commercially available 3D reconstruction tool Pix4Dmapper is done
 
 # Background
 
+As a basis for SfM reconstruction a series of pictures acquired by a Drone with a built in synchronized camera and RTK-GNSS System is used, the dataset is publicly available. The camera and RTK-GNSS are synchronized by a microcomputer on the drone (see \label{fig-DroneSetup}), while the images and their positions are monitored from the ground base. For evaluation of the algorithm a fake plant, and three boxes of known size are placed on the ground, on of the boxes with a plant on it.[@matsuura2023]
+
+```{=tex}
+\begin{figure*}[tp]
+\centering
+\subfloat{\includegraphics[width=3in]{images/drone.png}%
+\label{fig-first_drone}}
+\hfil
+\subfloat{\includegraphics[width=3in]{images/testsetup.png}%
+\label{fig-second_drone}}
+\caption{Drone used to aquire the data (left) and the drone in the testing environment (right) \autocite{matsuura2023}}
+\label{fig-DroneSetup}
+\end{figure*}
+```
+Images are captured in a resolution of $5472x3638$ pixels from a height of $10m$ and $20m$ in a overflight configuration as seen in \label{fig-sampleSeries}. For the remaining drone specs, refer to \label{table_specs}. [@matsuura2023]
+
+```{=tex}
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=6in]{images/sampleSeries.png}
+\caption{Sample series captured by the drone \autocite{matsuura2023}}
+\label{fig-sampleSeries}
+\end{figure*}
+```
+```{=tex}
+\begin{table}[!t]
+    % increase table row spacing, adjust to taste
+    \renewcommand{\arraystretch}{1.3}
+    % !if using array.sty, it might be a good idea to tweak the value of
+    % \extrarowheight as needed to properly center the text within the cells
+    \caption{Drone Specifications \autocite{matsuura2023}}
+    \label{table_specs}
+    \centering
+    % Some packages, such as MDW tools, offer better commands for making tables
+    % than the plain LaTeX2e tabular which is used here.
+    \begin{tabular}{|>{\raggedright}p{0.35\linewidth}|p{0.55\linewidth}|}
+        \hline
+        \textbf{Component} & \textbf{Specification}\\
+        \hline
+        Drone Body & GD-X8 V2 (1000 mm)\\
+        \hline
+        Motors & T-motor P60 × 4 \\
+        \hline
+        Flight Controller & CUAV X7 \\
+        \hline
+        GNSS & RTK-GNSS: ZED-F9P module \\
+        \hline
+        Gimbal & GREMSY S1V3 \\
+        \hline
+        Camera & Canon PowerShot G7 X Mark 2 \\
+        \hline
+        Micro-computer & JETSON Nano \\
+        \hline
+    \end{tabular}
+\end{table}
+```
 # Proposed Method
 
 # Results
@@ -60,8 +118,6 @@ The conclusion goes here.
 # Acknowledgment {#acknowledgment}
 
 The authors would like to thank...
-
-# Bibliography styles
 
 \newpage
 
