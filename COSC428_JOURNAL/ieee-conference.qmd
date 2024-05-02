@@ -31,7 +31,7 @@ affiliation:
 
 abstract: |
   Lorem ipsum dolor sit amet, consectetur adipiscing elit. In hoc documento, ego praesento innovativum AI-driven methodum ad obtinendum altum praecisum tridimensionalibus (3D) reconstructiones ex imagines volatus deserto vehiculorum (UAV). Perhibeo leveraging incisivum artificiosum intelligentiae (AI) technicas, maxime profunda discentibus algorithmis, meus accedo cito augeo veritas 3D reconstructiones acquirentibus ab UAV imagines. Fundamentum meum novitatum requiesco in emendatio UAV positiones data per fusionem sensorum et machina discens-based localization methodum. Per communio informationis ex diversis auctis sensibus ut GPS, IMU, et visual odometry, meus AI-driven modus magna ex parte accendo integram positiones veritas, consequenter augeo magis exacter 3D reconstructiones. Perampla experimentalis evaluationes acta in realis-mundi datasets confirmo efficacia et superioritatem meus propono AI-driven methodologia supra praesentia aditus. Hic investigatio significantem profectus facio in UAV-based 3D reconstruction, cum latissimus implicationes ad applications districtum ambientis explorationem, urbana consilium, et inspectionem infrastructure.
-keywords: [3D Reconstruction, Phenotyping]
+keywords: [3D reconstruction, multi-view reconstruction, phenotyping, structure from motion, point cloud processing]
 bibliography: bibliography.bib
 colorlinks: false
 numbersections: true
@@ -39,17 +39,21 @@ numbersections: true
 
 # Introduction
 
-To overcome the up to 56% increase in food demand by 2050, serious measures have to be applied, as current crop production is insufficient to lower the risk of hunger. Furthermore an overall more stable crop production, able to deal with pests, pathogens, heat waves and other climate change induced weather extremes, must be achieved [@vandijk2021]. A key point of breeding new resilient crops are double haploidy, genomics-assisted breeding, breeding data management and high-throughput and precise phenotyping [@prasanna2021; @araus2018]. Expecially the latter has developed significantly with the wider spread and higher affordability of deep learning. Unmanned areal vehicles (UAV) - drones are used in agriculture for pesticide spraying and crop monitoring. Equipted with various sensors and cameras of different spectra, drones are a useful tool for crop monitoring, either for pesticide spraying, fertilizer estimation or crop monitoring. [@mogili2018]
+To overcome the up to 56% increase in food demand by 2050, serious measures have to be applied, as current crop production is insufficient to lower the risk of hunger. Furthermore an overall more stable crop production, able to deal with pests, pathogens, heat waves and other climate change induced weather extremes, must be achieved [@vandijk2021]. A key point of breeding new resilient crops are double haploidy, genomics-assisted breeding, breeding data management and high-throughput and precise phenotyping [@prasanna2021; @araus2018]. Acquisition of large-scale phenotype data in traditional research is mainly based on manual measurements and thus become a major bottleneck for big-data [@yang2020]. Unmanned areal vehicles (UAV) - drones are used in agriculture for pesticide spraying and crop monitoring. Equipted with various sensors and cameras of different spectra, drones are a useful tool for crop monitoring, either for pesticide spraying, fertilizer estimation or crop monitoring [@mogili2018].
 
 ![Examples of potential applications of field phenotyping with RGB-Images. Different phenotyping needs in respect to the corresponding pheneological stage. [@araus2018]](images/pheneostages.jpg){#fig-pheneostages width="8cm" height="11.5cm"}
 
-In plant phenotyping specifically there is a need in the accurate capture of individual plants, or the recording of individual characteristics depending on the phonological stage of a plant (see @fig-pheneostages) [@araus2018]. Drones seam to be especially useful for this task, based on the low price and ease of use [@guo2021]. If needed, drones can be combined with ground robots to capture more data from angles obstructed for the drone (e.g. under the canopy) [@gao2021]. As 3D reconstruction is a important part of phenotyping and, if accurate enough, can act as a new base for algorithms to work out other plant details, we propose Structure from Motion (SfM) algorithms and quantify their accuracy.
+In plant phenotyping specifically there is a need in the accurate capture of individual plants, or the recording of individual characteristics depending on the phonological stage of a plant (see @fig-pheneostages) [@araus2018]. Traditionally ground based systems are used for this task, as the environmental variables can be controlled much easier [@yang2020]. If drones could be used instead, this would increase effectiveness and reduce the direct environmental impact, e.g. through ground pressure. Drones seam to be especially useful for this task, based on the low price and ease of use [@guo2021]. If needed, drones can be combined with ground robots to capture more data from angles obstructed for the drone (e.g. under the canopy) [@gao2021]. 3D reconstruction is a important part of phenotyping and, if accurate enough, could at as a new base for algorithms to work out other plant details like correlations between biomass and plant constituents [@xiao2020]. Furthermore with the acquisition of precise 3D models of plants over time, functional structural plant models (FSPMs) can be constructed and conclusions drawn [@soualiou2021].
 
-For for 3D reconstruction COLMAP [@schönberger2024] is used, which applies pixelwise view selection [@schönberger2016; @schönberger2016a]. A comparison with a commercially available 3D reconstruction tool Pix4Dmapper is done
+3D reconstruction through Structure from Motion (SfM) is usually featured as lightweight and cheap to implement, as only one or several standard monochrome or colour cameras can be used to capture the needed images. Furthermore a complete reconstruction can be done on unstructured images, without the use of references e.g. GNSS [@paulus2019].
 
 # Background
 
-As a basis for SfM reconstruction a series of pictures acquired by a Drone with a built in synchronized camera and RTK-GNSS System is used, the dataset is publicly available. The camera and RTK-GNSS are synchronized by a microcomputer on the drone (see \label{fig-DroneSetup}), while the images and their positions are monitored from the ground base. For evaluation of the algorithm a fake plant, and three boxes of known size are placed on the ground, on of the boxes with a plant on it.[@matsuura2023]
+# Proposed Method
+
+## Drone Platform
+
+As a basis for SfM reconstruction a series of pictures acquired by a Drone with a built in synchronized camera and RTK-GNSS System is used, the dataset is publicly available by ref. [@matsuura2023]. The camera and RTK-GNSS are synchronized by a microcomputer one the drone (see \cref{fig-DroneSetup}), while the images and their positions are monitored from the ground base. For evaluation of the algorithm a fake plant, and three boxes of known size are placed on the ground, on of the boxes with a plant on it.[@matsuura2023]
 
 ```{=tex}
 \begin{figure*}[tp]
@@ -63,7 +67,7 @@ As a basis for SfM reconstruction a series of pictures acquired by a Drone with 
 \label{fig-DroneSetup}
 \end{figure*}
 ```
-Images are captured in a resolution of $5472x3638$ pixels from a height of $10m$ and $20m$ in a overflight configuration as seen in \label{fig-sampleSeries}. For the remaining drone specs, refer to \label{table_specs}. [@matsuura2023]
+Images are captured in a resolution of $5472x3638$ pixels from a height of $10m$ and $20m$ in a overflight configuration as seen in \cref{fig-sampleSeries}. For the remaining drone specs, refer to \cref{table_specs}. [@matsuura2023]
 
 ```{=tex}
 \begin{figure*}[!t]
@@ -74,7 +78,7 @@ Images are captured in a resolution of $5472x3638$ pixels from a height of $10m$
 \end{figure*}
 ```
 ```{=tex}
-\begin{table}[!t]
+\begin{table}
     % increase table row spacing, adjust to taste
     \renewcommand{\arraystretch}{1.3}
     % !if using array.sty, it might be a good idea to tweak the value of
@@ -105,15 +109,15 @@ Images are captured in a resolution of $5472x3638$ pixels from a height of $10m$
     \end{tabular}
 \end{table}
 ```
-# Proposed Method
+## Computer Vision System
+
+For for 3D reconstruction COLMAP [@schönberger2024] is used, which applies pixelwise view selection [@schönberger2016; @schönberger2016a]. A comparison with a commercially available 3D reconstruction tool Pix4Dmapper is done.
 
 # Results
 
 # Conclusion
 
 The conclusion goes here.
-
-# Methods
 
 # Acknowledgment {#acknowledgment}
 
