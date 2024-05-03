@@ -9,7 +9,7 @@ import utils.utils as utils
 reconstruct = False     # timeintensive!
 reconst_path = Path('data/reconstruction')
 pcloud_path = Path('data/pclouds')
-image_dir = Path('/media/ami162/ESD-USB/Exp1_smaller_lowflight')
+image_dir = Path('D:\Exp1_smaller_lowflight')
 #pcloud_name = "pcd_lowflight"
 #pcloud_name = "pcd_complete"
 pcloud_name = "pcd_pix4d"
@@ -17,7 +17,9 @@ pcloud_name = "pcd_pix4d"
 # ---- programm ----
 if reconstruct:
     utils.compute_pcloud(image_dir, reconst_path)   
-pcloud = utils.convert_pcloud(reconst_path/"mvs"/"sparse", pcloud_path, pcloud_name)
+    pcloud = utils.convert_pcloud(reconst_path, pcloud_path, pcloud_name)
+else:
+    pcloud = utils.read_pcloud(pcloud_path, pcloud_name)
 pcloud, _ = utils.clean_pcloud(pcloud, flipz=True)
 plants_bb, _ = utils.compute_plants(pcloud)
 
