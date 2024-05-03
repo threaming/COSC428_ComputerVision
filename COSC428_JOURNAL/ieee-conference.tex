@@ -156,6 +156,9 @@
 
 % *** MATH PACKAGES ***
 %
+\usepackage{amsmath}
+\usepackage{amssymb}
+\interdisplaylinepenalty=2500
 %\usepackage{amsmath}
 % A popular package from the American Mathematical Society that provides
 % many useful and powerful commands for dealing with mathematics.
@@ -540,7 +543,7 @@ from motion, point cloud processing
 % creates the second title. It will be ignored for other modes.
 \IEEEpeerreviewmaketitle
 
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[interior hidden, enhanced, boxrule=0pt, breakable, borderline west={3pt}{0pt}{shadecolor}, frame hidden, sharp corners]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[enhanced, frame hidden, boxrule=0pt, interior hidden, sharp corners, breakable, borderline west={3pt}{0pt}{shadecolor}]}{\end{tcolorbox}}\fi
 
 
 \hypertarget{introduction}{%
@@ -560,7 +563,7 @@ thus become a major bottleneck for big-data \autocite{yang2020}.
 Unmanned areal vehicles (UAV) - drones are used in agriculture for
 pesticide spraying and crop monitoring. Equipted with various sensors
 and cameras of different spectra, drones are a useful tool for crop
-monitoring, either for pesticide spraying, fertilizer estimation or crop
+monitoring, either for pesticide spraying, fertiliser estimation or crop
 monitoring \autocite{mogili2018}.
 
 \begin{figure}
@@ -594,14 +597,222 @@ with the acquisition of precise 3D models of plants over time,
 functional structural plant models (FSPMs) can be constructed and
 conclusions drawn \autocite{soualiou2021}.
 
-Structure from motion (SfM) is usually featured as lightweight and cheap
-to implement, as only one or several standard monochrome or colour
-cameras can be used to capture the needed images. Furthermore a complete
-reconstruction can be done on unstructured images, without the use of
-references e.g.~GNSS \autocite{paulus2019}.
+3D reconstruction through Structure-from-Motion (SfM) is usually
+featured as lightweight and cheap to implement, as only one or several
+standard monochrome or colour cameras can be used to capture the needed
+images. Furthermore a complete reconstruction can be done on
+unstructured images, without the use of references e.g.~GNSS
+\autocite{paulus2019}.
 
 \hypertarget{background}{%
 \section{Background}\label{background}}
+
+This section describes the state of the art implementation of SfM for 3D
+reconstruction and is heavily based on J.~Schönebergers
+\autocite{schönberger2016,schönberger2016a} work, and the implementation
+in COLMAPS \autocite{schönberger2024}.
+
+SfM is constructing a scene through projections of images taken from
+different viewpoints. To incorporate a series of images, a sequential
+processing pipeline with a iterative reconstruction component forms the
+incremental SfM (see \cref{fig-recons_algo}). \autocite{schönberger2016}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{images/recons_algo.png}
+\caption{Incremental SfM pipeline (adapted from \autocite{schönberger2016})}
+\label{fig-recons_algo}
+\end{figure*}
+
+\hypertarget{correspondence-search}{%
+\subsection{Correspondence Search}\label{correspondence-search}}
+
+The first stage identifies projections of the same points in overlapping
+input images (key points) and then outputs a set of geometrically
+verified image pairs and a graph of the image projections for each
+point. \autocite{schönberger2016}
+
+\hypertarget{feature-extraction}{%
+\subsubsection{Feature Extraction}\label{feature-extraction}}
+
+For each input image \(I_i\), sets of local features
+\(\mathcal{F}_i=\{(x_j,f_j)|j=1\dots N_{F_i}\}\) represented as a
+appearance descriptor \(f_j\) at location \(x_j\in \mathbb{R}^2\) are
+processed. To be uniquely recognisable in different images, the features
+should be invariant under radiometric and geometric changes
+\autocite{mcglone2004}. Several feature detectors based of Scale
+Invariant Feature Transform (SIFT) \autocite{lowe1999,tuytelaars2008}
+seem to be especially performing in terms of robustness.
+\autocite{schönberger2016}
+
+\hypertarget{matching}{%
+\subsubsection{Matching}\label{matching}}
+
+To work out scene overlaps between images for later triangulation, the
+features \(\mathcal{F}_j\) of all images pairs are tested. It searches
+for corresponding features by finding the most similar feature in image
+\(I_a\) for each feature in image \(I_b\) through the similarity metric
+\(f_j\). The output of this are potential overlapping image pairs
+\(\mathcal{C}=\{I_a,I_b\}\) and their respective feature correspondences
+\(\mathcal{M}_{ab}\).\autocite{schönberger2016}
+
+\hypertarget{geometric-verification}{%
+\subsubsection{Geometric Verification}\label{geometric-verification}}
+
+Since matching is only based on appearance and not location, it can not
+be guaranteed, that the potential image pairs \(\mathcal{C}\) are
+actually overlapping. To verify this, SfM estimates a transformation
+matrix that maps feature points between images. As a result a homography
+\(\mathbf{H}\) for planar scenes, a essential matrix \(\mathbf{E}\), or
+a fundamental matrix \(\mathbf{F}\) for moving cameras is estimated.
+Because of heavy outlier-contaminated matching correspondences, robust
+estimators like RANSAC \autocite{fischler1981} are required. A potential
+image pair \(\mathcal{C}\) becomes a verified image pair
+\(\bar{\mathcal{C}}\) if enough inliers can be described as a
+fundamental matrix \(\mathbf{F}\). Besides the verified image pair
+\(\bar{\mathcal{C}}\), their respective inlier correspondence
+\(\bar{\mathcal{M}}_{ab}\), and a description of their geometric
+relation \(\mathcal{G}_{ab}\) are outputted by this stage. To compute
+the geometric relation \(\mathcal{G}_{ab}\), GRIC \autocite{torr1997} is
+used as a decision criterion. The output of GRIC is a scene graph with
+images as nodes and verified pairs of images as edges.
+\autocite{schönberger2016}
+
+\hypertarget{incremental-reconstruction}{%
+\subsection{Incremental
+Reconstruction}\label{incremental-reconstruction}}
+
+The reconstruction stage computes the pose estimates \(\mathcal{P}\) and
+the reconstructed scene as a set of points \(\mathcal{X}\) with
+\(X_k\in\mathbb{R}^3\). For that, the scene graph from the last scene is
+used and one image after the other is added to the model. In a iterative
+process, all images are incorporated in the reconstruction of the scene.
+\autocite{schönberger2016}
+
+\hypertarget{next-best-view-selection}{%
+\subsubsection{Next Best View
+Selection}\label{next-best-view-selection}}
+
+To work out what images to take next and especially with what pair of
+images to start with, a robust view selection has to be applied. This is
+done through a scoring approach which is applied to each image, more
+precisely to the matching key points of image pairs. More visible points
+and a more uniform distribution of these points results in a higher
+score \(\mathcal{S}\) (see Figure~\ref{fig-BestViewSelection})
+\autocite{irschara2009}. Because of more points to triangulate, images
+with high score are, especially in early iterations, better suited for a
+robust reconstruction.
+
+\begin{figure}
+
+{\centering \includegraphics[width=8.5cm,height=3.3cm]{images/BestViewSelection.png}
+
+}
+
+\caption{\label{fig-BestViewSelection}Scores for different number of
+points (left and right) with different distributions (top and bottom) in
+the image for \(L=3\) \autocite{schönberger2016}}
+
+\end{figure}
+
+Each image is split into a grid of cells which are either \emph{empty}
+if no point is present or \emph{full} if one or more points are present.
+This gives a higher score to equally distributed points. This scheme
+might not capture distribution well if few partitions are present, as
+every partition might be activated by a point (e.g.~most bottom left
+configuration in Figure~\ref{fig-BestViewSelection}). Therefore a
+multiresolution approach with \(l=1\dots L\) levels of partitioning with
+incrementing resolution \(K_l=2^l\) is used. The score is then
+accumulated over all levels. \autocite{schönberger2016}
+
+\hypertarget{image-registration}{%
+\subsubsection{Image Registration}\label{image-registration}}
+
+Through the Next Best View Selection approach, we get the image which
+sees the most triangulated points of the current model. To estimate the
+pose \(\mathbf{P}_c\) of the newly registered image, we further maximise
+the score and thus the viewable points. This is commonly known as the
+Perspective-n-Pose (PnP) \autocite{fischler1981} problem. The estimated
+pose \(\mathbf{P}_c\) is then added to the set of poses \(\mathcal{P}\).
+\autocite{schönberger2016}
+
+\hypertarget{triangulation}{%
+\subsubsection{Triangulation}\label{triangulation}}
+
+With the registered image and the scene graph of the newly present image
+pairs, further points \(X_k\) can be triangulated and added to the scene
+set \(\mathcal{X}\). This point \(X_k\) is valid as soon as one or more
+images covering the scene from a different viewpoint are registered. For
+multi-view triangulation, and especially handling outlier contamination,
+RANSAC is used. A feature track \(\mathcal{T}\) consisting of normalised
+image observations \(\bar{x}_n\in\mathbb{R}^2\) and a corresponding pose
+\(\mathbf{P}_n\). The goal is then to maximise the support of
+measurements conforming with a triangulation
+
+\[
+X_{ab}\sim \tau(\bar{x}_a,\bar{x}_b,\mathbf{P}_a,\mathbf{P}_b)\text{ with } a\neq b
+\]
+
+where \(\tau\) is the DLT \autocite{hartley2004} is the triangulation
+and \(X_{ab}\) the triangulated point. A well-conditioned model
+satisfies a sufficient triangulation angle \(\alpha\) and positive
+depths \(d_{a/b}\) with respect to the image poses \(\mathbf{P}_{a/b}\).
+\autocite{schönberger2016}
+
+\hypertarget{local-bundle-adjustment}{%
+\subsubsection{Local Bundle Adjustment}\label{local-bundle-adjustment}}
+
+As image registration and triangulation are separate processes, their
+outputs are highly correlated. Still there are uncertainties propagating
+from camera poses to triangulation and the other way around. To further
+suppress such induced errors we perform bundle adjustment. Because
+incremental SfM affects models only locally, we only perform a local BA
+on a set of the most connected images. BA is a iterative process, with
+the goal to reduce a loss-function, in our case a Cauchy function
+\(\rho_j\). The optimisation is performed through a Ceres Solver
+\autocite{ceresso}. \autocite{schönberger2016}
+
+\hypertarget{filtering}{%
+\subsubsection{Filtering}\label{filtering}}
+
+After a local BA, observations which don't conform with the model are
+filtered out. These are characterised through a large reprojection error
+\autocite{wu2013}. \autocite{schönberger2016}
+
+\hypertarget{retirangulation}{%
+\subsubsection{Retirangulation}\label{retirangulation}}
+
+To account for drift effects induced through the local BA, a
+retriangulation is performed. This helps in improving completeness of
+reconstruction by continuing tracks of points, that previously might
+have failed to triangulate. \autocite{schönberger2016}
+
+\hypertarget{global-bundle-adjustment}{%
+\subsubsection{Global Bundle
+Adjustment}\label{global-bundle-adjustment}}
+
+After the model has grown by a certain percentage, a global BA is
+performed, resulting in a amortised linear run-time of SfM. Without this
+refinement, SfM tend to drift into a non-recoverable state. Similarly to
+the local BA, a Cauchy function \(\rho_j\) is optimised with the Ceres
+Solver \autocite{ceresso}. \autocite{schönberger2016}
+
+\hypertarget{multi-view-stereo}{%
+\subsection{Multi-View Stereo}\label{multi-view-stereo}}
+
+After completing the iterative SfM, we acquired a set of poses
+\(\mathcal{P}\) and reconstructed points \(\mathcal{X}\). These points
+\(X_k\) represent the triangulation of matched key points between image
+pairs. To condense the pointcloud further, multi-view stereo (MVS)
+\autocite{bailer2012} can be applied. In the following, pixelwise view
+selection for MVS, heavily based on J.~Schönebergers
+\autocite{schönberger2016a} work, is covered.
+
+\hypertarget{image-distortion}{%
+\subsubsection{Image Distortion}\label{image-distortion}}
+
+\hypertarget{stereo-fusion}{%
+\subsubsection{Stereo Fusion}\label{stereo-fusion}}
 
 \hypertarget{proposed-method}{%
 \section{Proposed Method}\label{proposed-method}}
@@ -610,9 +821,9 @@ references e.g.~GNSS \autocite{paulus2019}.
 \subsection{Drone Platform}\label{drone-platform}}
 
 As a basis for SfM reconstruction a series of pictures acquired by a
-Drone with a built in synchronized camera and RTK-GNSS System is used,
+Drone with a built in synchronised camera and RTK-GNSS System is used,
 the dataset is publicly available by ref. \autocite{matsuura2023}. The
-camera and RTK-GNSS are synchronized by a microcomputer one the drone
+camera and RTK-GNSS are synchronised by a microcomputer one the drone
 (see \cref{fig-DroneSetup}), while the images and their positions are
 monitored from the ground base. For evaluation of the algorithm a fake
 plant, and three boxes of known size are placed on the ground, on of the
