@@ -1,6 +1,4 @@
-\#
-
-<center>💡🧠🤔 3D Reconstruction from UAV Images for Plant Phenotyping 🌳🌲🌴</center>
+# 💡🧠🤔 3D Reconstruction from UAV Images for Plant Phenotyping 🌳🌲🌴
 
 ## 📝 Description:
 
@@ -17,11 +15,13 @@ Please follow instructions to download data from this <a href="https://www.natur
 
 ## 🔧 Installation:
 
-First, make sure you have Conda installed. Create a virtual environment and install all dependencies from `requirements.txt`
+First, make sure you have Conda installed. Create a virtual environment and install all dependencies from `requirements.txt`.
+
+If you are keen and have a proper machine, compile COLMAP to be supported by CUDA from the following <a href="https://colmap.github.io/install.html#build-from-source">link</a>
 
 ## 📈 Data Preparation:
 
-If the above provided dataset is used, the images have to be reprocessed to use. Images must be in *.png* or *.jpg* format with the max resolution of $2472$x$1648$. Use the following script to resize and convert the images.
+If the above provided dataset is used, the images have to be reprocessed to use. Images must be in *.png* or *.jpg* format with the max resolution of 2472x1648. Use the following script to resize and convert the images.
 
 First install
 
