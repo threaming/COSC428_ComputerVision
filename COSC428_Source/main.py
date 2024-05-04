@@ -11,8 +11,8 @@ reconst_path = Path('data/reconstruction')
 pcloud_path = Path('data/pclouds')
 image_dir = Path('D:\Exp1_smaller_lowflight')
 #pcloud_name = "pcd_lowflight"
-#pcloud_name = "pcd_complete"
-pcloud_name = "pcd_pix4d"
+pcloud_name = "pcd_complete"
+#pcloud_name = "pcd_pix4d"
 
 # ---- programm ----
 if reconstruct:
@@ -20,7 +20,8 @@ if reconstruct:
     pcloud = utils.convert_pcloud(reconst_path, pcloud_path, pcloud_name)
 else:
     pcloud = utils.read_pcloud(pcloud_path, pcloud_name)
+print(f"Number of points in point cloud: {len(pcloud.points)}")
 pcloud, _ = utils.clean_pcloud(pcloud, flipz=True)
-plants_bb, _ = utils.compute_plants(pcloud)
+plants_bb, _, pcloud = utils.compute_plants(pcloud)
 
 o3d.visualization.draw_geometries([pcloud]+ plants_bb, window_name=f'Pointcloud ({pcloud_name}) w/ Plant Bounding Boxes')

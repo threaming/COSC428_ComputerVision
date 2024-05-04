@@ -124,6 +124,7 @@ def compute_plants(pcd, hthresh=0.4):
     # --------------- create scene bounding box -------------
     bb = pcd.get_axis_aligned_bounding_box() # add bounding box
     bb.color = [1,0,0]
+    
     #o3d.visualization.draw_geometries([pcloud, bb])
 
     # --------------- fit plane ----------------- (from labs)
@@ -158,7 +159,7 @@ def compute_plants(pcd, hthresh=0.4):
 
         pcdit = remove_points_inside_box(pcdit, fbb)
 
-    return plant_bb, plant_h
+    return plant_bb, plant_h, pcd
 
 # create pointcloud
 def compute_pcloud(image_dir, output_path):
@@ -203,5 +204,5 @@ def convert_pcloud(reconst_dir, output_path, pcd_name="points3D"):
 
 # open pointcloud
 def read_pcloud(pcd_path, pcd_name):
-    pcloud = o3d.io.read_point_cloud(str(pcd_path/pcd_name))
+    pcloud = o3d.io.read_point_cloud(str(pcd_path/pcd_name)+".ply")
     return pcloud
