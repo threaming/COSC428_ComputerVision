@@ -319,7 +319,7 @@
 \usepackage[noabbrev,capitalize]{cleveref}
 
 \hypersetup{
-            pdftitle={3D Reconstruction from UAV Images for Plant Phenotyping},
+            pdftitle={3D Reconstruction from UAV Images for Plant Phenotyping through incremental SfM},
             pdfkeywords={3D reconstruction, multi-view
 reconstruction, phenotyping, structure from motion, point cloud
 processing},
@@ -415,7 +415,8 @@ processing},
 % not capitalized unless they are the first or last word of the title.
 % Linebreaks \\ can be used within to get better formatting as desired.
 % Do not put math or special symbols in the title.
-\title{3D Reconstruction from UAV Images for Plant Phenotyping}
+\title{3D Reconstruction from UAV Images for Plant Phenotyping through
+incremental SfM}
 
 % author names and affiliations
 % use a multiple column layout for up to three different
@@ -543,7 +544,7 @@ from motion, point cloud processing
 % creates the second title. It will be ignored for other modes.
 \IEEEpeerreviewmaketitle
 
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[enhanced, frame hidden, boxrule=0pt, interior hidden, sharp corners, breakable, borderline west={3pt}{0pt}{shadecolor}]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[breakable, sharp corners, frame hidden, interior hidden, boxrule=0pt, enhanced, borderline west={3pt}{0pt}{shadecolor}]}{\end{tcolorbox}}\fi
 
 
 \hypertarget{introduction}{%
@@ -601,11 +602,12 @@ conclusions drawn \autocite{soualiou2021}.
 featured as lightweight and cheap to implement, as only one or several
 standard monochrome or colour cameras can be used to capture the needed
 images. Furthermore a complete reconstruction can be done on
-unstructured images, without the use of references e.g.~GNSS
-\autocite{paulus2019}.
+unstructured images, without the use of references e.g.~GNSS. With
+increasing dataset size a higher resolution can be achieved, SfM are
+usually able to provide mm-accuracy \autocite{paulus2019}.
 
-\hypertarget{background}{%
-\section{Background}\label{background}}
+\hypertarget{sec-background}{%
+\section{Background}\label{sec-background}}
 
 This section describes the state of the art implementation of SfM for 3D
 reconstruction and is heavily based on J.~Schönebergers
@@ -617,7 +619,12 @@ different viewpoints. To incorporate a series of images, a sequential
 processing pipeline with a iterative reconstruction component forms the
 incremental SfM (see \cref{fig-recons_algo}). \autocite{schönberger2016}
 
-\begin{figure*}[!t]
+After completing the iterative SfM, we acquired a set of poses
+\(\mathcal{P}\) and reconstructed points \(\mathcal{X}\). These points
+\(X_k\) represent the triangulation of matched key points between image
+pairs.
+
+\begin{figure*}[htbp]
 \centering
 \includegraphics[width=\textwidth]{images/recons_algo.png}
 \caption{Incremental SfM pipeline (adapted from \autocite{schönberger2016})}
@@ -797,37 +804,28 @@ refinement, SfM tend to drift into a non-recoverable state. Similarly to
 the local BA, a Cauchy function \(\rho_j\) is optimised with the Ceres
 Solver \autocite{ceresso}. \autocite{schönberger2016}
 
-\hypertarget{multi-view-stereo}{%
-\subsection{Multi-View Stereo}\label{multi-view-stereo}}
-
-After completing the iterative SfM, we acquired a set of poses
-\(\mathcal{P}\) and reconstructed points \(\mathcal{X}\). These points
-\(X_k\) represent the triangulation of matched key points between image
-pairs. To condense the pointcloud further, multi-view stereo (MVS)
-\autocite{bailer2012} can be applied. In the following, pixelwise view
-selection for MVS, heavily based on J.~Schönebergers
-\autocite{schönberger2016a} work, is covered.
-
-\hypertarget{image-distortion}{%
-\subsubsection{Image Distortion}\label{image-distortion}}
-
-\hypertarget{stereo-fusion}{%
-\subsubsection{Stereo Fusion}\label{stereo-fusion}}
-
 \hypertarget{proposed-method}{%
 \section{Proposed Method}\label{proposed-method}}
 
-\hypertarget{drone-platform}{%
-\subsection{Drone Platform}\label{drone-platform}}
+This section describes the proposed method for 3D reconstruction of
+plants through a UAV for phenotyping. First, the imaging platform, which
+consists of a drone equipped with a high resolution camera and a
+RTK-GNSS localisation system for imaging the plants; second, the
+computer vision system, which builds a 3D point cloud of the ground and
+its plants.
+
+\hypertarget{sec-drone}{%
+\subsection{Drone Platform}\label{sec-drone}}
 
 As a basis for SfM reconstruction a series of pictures acquired by a
 Drone with a built in synchronised camera and RTK-GNSS System is used,
 the dataset is publicly available by ref. \autocite{matsuura2023}. The
-camera and RTK-GNSS are synchronised by a microcomputer one the drone
+camera and RTK-GNSS are synchronised by a microcomputer on the drone
 (see \cref{fig-DroneSetup}), while the images and their positions are
-monitored from the ground base. For evaluation of the algorithm a fake
-plant, and three boxes of known size are placed on the ground, on of the
-boxes with a plant on it.\autocite{matsuura2023}
+monitored from the ground base. The RTK-GNSS data is not used for 3D
+reconstruction in this paper. For evaluation of the algorithm, a fake
+plant, and three boxes of known size are placed on the ground, one of
+the boxes with a plant on it. \autocite{matsuura2023}
 
 \begin{figure*}[tp]
 \centering
@@ -840,28 +838,17 @@ boxes with a plant on it.\autocite{matsuura2023}
 \label{fig-DroneSetup}
 \end{figure*}
 
-Images are captured in a resolution of \(5472x3638\) pixels from a
-height of \(10m\) and \(20m\) in a overflight configuration as seen in
-\cref{fig-sampleSeries}. For the remaining drone specs, refer to
-\cref{table_specs}. \autocite{matsuura2023}
+Images are captured in a resolution of \(5472\) x \(3638\) pixels from a
+height of \(10m\) and \(20m\) in a overflight configuration. For the
+further drone specs, refer to \cref{table_specs}.
+\autocite{matsuura2023}
 
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=6in]{images/sampleSeries.png}
-\caption{Sample series captured by the drone \autocite{matsuura2023}}
-\label{fig-sampleSeries}
-\end{figure*}
-
+% ------------- Drone specs table -------------
 \begin{table}
-    % increase table row spacing, adjust to taste
     \renewcommand{\arraystretch}{1.3}
-    % !if using array.sty, it might be a good idea to tweak the value of
-    % \extrarowheight as needed to properly center the text within the cells
     \caption{Drone Specifications \autocite{matsuura2023}}
     \label{table_specs}
     \centering
-    % Some packages, such as MDW tools, offer better commands for making tables
-    % than the plain LaTeX2e tabular which is used here.
     \begin{tabular}{|>{\raggedright}p{0.35\linewidth}|p{0.55\linewidth}|}
         \hline
         \textbf{Component} & \textbf{Specification}\\
@@ -878,6 +865,8 @@ height of \(10m\) and \(20m\) in a overflight configuration as seen in
         \hline
         Camera & Canon PowerShot G7 X Mark 2 \\
         \hline
+        Image Resolution & 5472 x 3638\\
+        \hline
         Micro-computer & JETSON Nano \\
         \hline
     \end{tabular}
@@ -886,23 +875,195 @@ height of \(10m\) and \(20m\) in a overflight configuration as seen in
 \hypertarget{computer-vision-system}{%
 \subsection{Computer Vision System}\label{computer-vision-system}}
 
-For for 3D reconstruction COLMAP \autocite{schönberger2024} is used,
-which applies pixelwise view selection
-\autocite{schönberger2016,schönberger2016a}. A comparison with a
-commercially available 3D reconstruction tool Pix4Dmapper is done.
+To retrieve a 3D point cloud for phenotyping of plants, we propose the
+use of a incremental SfM approach as described in
+Section~\ref{sec-background}. Due to computational limits (see
+\cref{table_system_specs} for system specifications), images are
+restricted to a resolution of \(2472\) x \(1648\). A comparison with a
+commercially available 3D reconstruction tool PIX4Dmapper, utilising the
+full resolution images, is done. Furthermore the reconstruction with
+PIX4Dmapper incorporates multi-view stereo (MVS) to further condense the
+point cloud.
 
-\hypertarget{results}{%
-\section{Results}\label{results}}
+% ------------- System specs table -------------
+\begin{table}
+    \renewcommand{\arraystretch}{1.3}
+    \caption{System Specifications}
+    \label{table_system_specs}
+    \centering
+    \begin{tabular}{|>{\raggedright}p{0.35\linewidth}|p{0.55\linewidth}|}
+        \hline
+        \textbf{Component} & \textbf{Specification}\\
+        \hline
+        OS & Linux Mint 21.1 Cinnamon\\
+        \hline
+        CPU & 12th Gen Intel CoreTM i7-12700x12\\
+        \hline
+        IDE & Visual Studio Code\\
+        \hline
+        Interpreter & Python 3.10.6\\
+        \hline
+        CUDA Support & No\\
+        \hline
+        Image Resolution & 2472 x 1648\\
+        \hline
+        COLMAP Version & 3.9.1\\
+        \hline
+    \end{tabular}
+\end{table}
+
+\hypertarget{sec-results}{%
+\section{Results}\label{sec-results}}
+
+The reconstruction algorithm is run on a system defined in
+\cref{table_system_specs}. The algorithm is run on the downsampled
+dataset acquired with the drone platform described in
+Section~\ref{sec-drone}. All images are collected in one run and than
+given to the algorithm as a unordered dataset. The algorithm then worked
+out a 3D pointcloud. For comparison a 3D reconstruction with the
+commercially available PIX4Dmapper is done on the downsampled and
+original dataset. Additionally, a densification of the pointcloud
+through MVS is done in PIX4Dmapper on the high resolution data set.
+
+If we compare the number of points in each pointcloud in
+\cref{tab-tool_performance}, it can be observed, that simple incremental
+SfM produces the least amount of points, where as PIX4Dmapper works out
+150\% more points on the same dataset. With a higher resolution the
+increase grows to 950\% and 9000\% if MVS is applied.
+
+\begin{table}
+    \renewcommand{\arraystretch}{1.3}
+    \caption{Tool Performance}
+    \label{tab-tool_performance}
+    \centering
+    \begin{tabular}{|>{\raggedright}p{0.45\linewidth}|p{0.45\linewidth}|}
+        \hline
+        \textbf{Tool} & \textbf{Reconstructed Points} \\
+        \hline
+        COLMAP & 85749 \\
+        \hline
+        PIX4Dmapper (Ties, Low-Res) & 217153 \\
+        \hline
+        PIX4Dmapper (Ties) & 901223 \\
+        \hline
+        PIX4Dmapper (MVS) & 7859904 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\begin{figure*}[tp]
+    \centering
+    \subfloat[]{\includegraphics[width=0.25\textwidth]{images/pcd_clr_colmap.png}%
+    \label{fig-colmap_clr}}
+    \hfil
+    \subfloat[]{\includegraphics[width=0.25\textwidth]{images/pcd_clr_pix4d_ties.png}%
+    \label{fig-pix4d_ties_lowres}}
+    \hfil
+    \subfloat[]{\includegraphics[width=0.25\textwidth]{images/pcd_clr_pix4d_ties.png}%
+    \label{fig-pix4d_ties}}
+    \hfil
+    \subfloat[]{\includegraphics[width=0.25\textwidth]{images/pcd_clr_pix4d_stereo.png}%
+    \label{fig-pix4d_stereo}}
+    \caption{The reconstructed pointclouds. In (a) through incremental SfM described in \cref{sec-background}, visualised in Open3D, (b) and (c) are computed with the comercial PIX4Dmapper and shows all triangulated points from matched image features (ties) on a low- and high-resolution dataset, respectively. In (d) MVS is applied in PIX4Dmapper for a denser pointcloud.}
+    \label{fig-pclouds}
+\end{figure*}
+
+To work out the plant heights, a peak finding algorithm is used. For
+this the pointcloud is filtered for outliers, and a plane is fitted to
+represent the ground. To find the plants, the point furthest away from
+the plane is taken, and its surrounding points deleted for the next
+iteration. This is repeated until the height falls under a certain
+threshold. As seen in \cref{fig-plants}, bounding boxes are set around
+each found peak, to visualise the separate plants in the pointcloud. It
+is clearly visual, that this algorithm can not distinguish between
+plants, ground or different objects, as no segmentation is performed.
+The algorithm is also incapable to adapt to different plant sizes, as
+the bounding boxes are fixed sized. Furthermore, fitting the ground to
+the plane leads to bumps in the ground to be recognised as plants. The
+plane approximation only works for flat grounds or flat patches in
+bigger point clouds.
+
+\begin{figure*}[tp]
+    \centering
+    \subfloat[]{\includegraphics[width=0.4\textwidth]{images/plants_colmap.png}%
+    \label{fig-plant_colmap}}
+    \hfil
+    \subfloat[]{\includegraphics[width=0.4\textwidth]{images/plants_pix4d.png}%
+    \label{fig-plant_pix4d}}
+    \caption{The found plants represented as red bounding boxes in the pointcloud. The color of each voxel is mapped on the z-coordinate of the respective voxel. (a) is the pointcloud acquired through incremental SfM (\cref{fig-colmap_clr}). (b) is the pointcloud acquired through MVS in PIX4Dmapper (\cref{fig-pix4d_stereo})}
+    \label{fig-plants}
+\end{figure*}
 
 \hypertarget{conclusion}{%
 \section{Conclusion}\label{conclusion}}
 
-The conclusion goes here.
+The paper proposed a method for constructing a 3D point cloud of plants
+from overhead images taken by a UAV. The incremental SfM algorithm,
+processing the unordered downsampled dataset, successfully generates a
+3D point cloud. A comparison with the commercially available PIX4Dmapper
+revealed, that the commercial solution generates 150\% more voxels.
+Furthermore, by reconstructing the point cloud with the high resolution
+images and finally applying multi-view-stereo for point cloud
+densification, 950\% and 9000\% more voxels are generated respectively.
 
-\hypertarget{acknowledgment}{%
-\section{Acknowledgment}\label{acknowledgment}}
+For plant determination, a peak finding algorithm is applied to the
+point cloud. After filtering the point cloud for outliers, a plane is
+fitted and plants in respect to the plane searched for. A fixed bounding
+box is created for each plant. Because of a missing segmentation, the
+algorithm can not distinguish between plants and surrounding points.
+Additionally, the fixed-size bounding boxes fail to adapt to plant
+dimensions, further inducing errors.
 
-The authors would like to thank\ldots{}
+\hypertarget{future-research}{%
+\subsection{Future Research}\label{future-research}}
+
+While this paper has provided valuable insights and advancements in the
+field of 3D reconstruction through incremental SfM, there are several
+points of improvements, to enhance the 3D reconstruction and also the
+plant phenotyping itself. The comparison in Section~\ref{sec-results}
+showed, that the commercial solution computes denser point clouds than
+the open source implementation of the incremental SfM. To improve this,
+multi-view stereo (MVS) \autocite{bailer2012} and it's refined variation
+pixelwise view selection for multi-view stereo
+\autocite{schönberger2016a} could be applied. However it must be noted,
+that a computation of a denser point cloud has to be viewed critically,
+as the computational effort rises exponentially with more voxels and
+thus a tradeoff between the accuracy and computational effort should be
+analysed \autocite{paulus2019,li2022}.
+
+Another way to improve point clouds while at the same time keeping the
+required computing power low, is to incorporate a RTK-GNSS signal, which
+provides spatial information about a taken image. Taking the location
+data into account, a stereo matching and reconstruction can be done
+through calculating the baseline of two images from the location data,
+after each acquired image. With this approach a realtime reconstruction
+on the fly can be achieved \autocite{hasheminasab2020,matsuura2023}. To
+work out a more accurate location of each image, and thus a higher
+accuracy baseline, ground control points (GPC) either as physical
+markers in the field or through feature matching should be investigated.
+Through the alignment of each new image, the accuracy of the position
+and thereby of the baseline, and finally the stereo matching, can be
+improved \autocite{feng2023}.
+
+Recently 3D reconstruction through deep learning approaches like NeRF
+\autocite{gao}, which is already used in the agricultural domain in the
+form of Zero NeRF \autocite{peat2022}, or gaussian splatting
+\autocite{kerbl} have gained considerable attention for its ability to
+capture detailed spatial information in submilimeter accuracy from 2D
+images.
+
+After retrieving a sufficient 3D point cloud of a plant, different
+approaches for phenotyping of plants should be looked into. For growth
+analysis, the measurement of plant heights can be done through disparity
+maps \autocite{matsuura2023}. In most cases more information about
+plants, such as width, convex hull, projected leaf area, leaf density,
+number of leaves, and the respective leaf lengths can be retrieved
+through deep learning segmentation. Through repeated acquisition over
+time, a time variable can be induced and thus a growth model is
+retrieved \autocite{paulus2019,li2022}. Fruthermore, incorporation of
+multispectra cameras can reveal data about the soil, to get a closed
+model of plants, their surroundings and their interaction
+\autocite{günder2022}.
 
 \newpage
 

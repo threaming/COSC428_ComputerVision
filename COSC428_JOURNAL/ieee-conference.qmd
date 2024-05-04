@@ -53,12 +53,12 @@ This section describes the state of the art implementation of SfM for 3D reconst
 
 SfM is constructing a scene through projections of images taken from different viewpoints. To incorporate a series of images, a sequential processing pipeline with a iterative reconstruction component forms the incremental SfM (see \cref{fig-recons_algo}). [@schönberger2016]
 
-After completing the iterative SfM, we acquired a set of poses $\mathcal{P}$ and reconstructed points $\mathcal{X}$. These points $X_k$ represent the triangulation of matched key points between image pairs. To condense the pointcloud further, multi-view stereo (MVS) [@bailer2012; @schönberger2016a] can be applied.
+After completing the iterative SfM, we acquired a set of poses $\mathcal{P}$ and reconstructed points $\mathcal{X}$. These points $X_k$ represent the triangulation of matched key points between image pairs.
 
 ```{=tex}
 \begin{figure*}[htbp]
 \centering
-\includegraphics[width=0.8\textwidth]{images/recons_algo.png}
+\includegraphics[width=\textwidth]{images/recons_algo.png}
 \caption{Incremental SfM pipeline (adapted from \autocite{schönberger2016})}
 \label{fig-recons_algo}
 \end{figure*}
@@ -127,7 +127,7 @@ This section describes the proposed method for 3D reconstruction of plants throu
 
 ## Drone Platform {#sec-drone}
 
-As a basis for SfM reconstruction a series of pictures acquired by a Drone with a built in synchronised camera and RTK-GNSS System is used, the dataset is publicly available by ref. [@matsuura2023]. The camera and RTK-GNSS are synchronised by a microcomputer on the drone (see \cref{fig-DroneSetup}), while the images and their positions are monitored from the ground base. For evaluation of the algorithm, a fake plant, and three boxes of known size are placed on the ground, one of the boxes with a plant on it. [@matsuura2023]
+As a basis for SfM reconstruction a series of pictures acquired by a Drone with a built in synchronised camera and RTK-GNSS System is used, the dataset is publicly available by ref. [@matsuura2023]. The camera and RTK-GNSS are synchronised by a microcomputer on the drone (see \cref{fig-DroneSetup}), while the images and their positions are monitored from the ground base. The RTK-GNSS data is not used for 3D reconstruction in this paper. For evaluation of the algorithm, a fake plant, and three boxes of known size are placed on the ground, one of the boxes with a plant on it. [@matsuura2023]
 
 ```{=tex}
 \begin{figure*}[tp]
@@ -205,7 +205,7 @@ To retrieve a 3D point cloud for phenotyping of plants, we propose the use of a 
     \end{tabular}
 \end{table}
 ```
-# Results
+# Results {#sec-results}
 
 The reconstruction algorithm is run on a system defined in \cref{table_system_specs}. The algorithm is run on the downsampled dataset acquired with the drone platform described in @sec-drone. All images are collected in one run and than given to the algorithm as a unordered dataset. The algorithm then worked out a 3D pointcloud. For comparison a 3D reconstruction with the commercially available PIX4Dmapper is done on the downsampled and original dataset. Additionally, a densification of the pointcloud through MVS is done in PIX4Dmapper on the high resolution data set.
 
@@ -250,7 +250,7 @@ If we compare the number of points in each pointcloud in \cref{tab-tool_performa
     \label{fig-pclouds}
 \end{figure*}
 ```
-To work out the plant heights, a unrobust peak finding algorithm is used. For this the pointcloud is filtered for outliers, and a plane is fitted to represent the ground. To find the plants the point furthest away from the plane is taken, and its surrounding points deleted for the next iteration. This is repeated until the height falls under a certain threshold. As seen in \cref{fig-plants}, bounding boxes are set around each found peak, to visualise the separate plants in the pointcloud. It is clearly visual, that this algorithm can not distinguish between plants, ground or different objects, as no segmentation is performed. The algorithm is furthermore incapable to adapt to different plant sizes, as the bounding boxes are fixed sized.
+To work out the plant heights, a peak finding algorithm is used. For this the pointcloud is filtered for outliers, and a plane is fitted to represent the ground. To find the plants, the point furthest away from the plane is taken, and its surrounding points deleted for the next iteration. This is repeated until the height falls under a certain threshold. As seen in \cref{fig-plants}, bounding boxes are set around each found peak, to visualise the separate plants in the pointcloud. It is clearly visual, that this algorithm can not distinguish between plants, ground or different objects, as no segmentation is performed. The algorithm is also incapable to adapt to different plant sizes, as the bounding boxes are fixed sized. Furthermore, fitting the ground to the plane leads to bumps in the ground to be recognised as plants. The plane approximation only works for flat grounds or flat patches in bigger point clouds.
 
 ```{=tex}
 \begin{figure*}[tp]
@@ -266,9 +266,19 @@ To work out the plant heights, a unrobust peak finding algorithm is used. For th
 ```
 # Conclusion
 
-The conclusion goes here.
+The paper proposed a method for constructing a 3D point cloud of plants from overhead images taken by a UAV. The incremental SfM algorithm, processing the unordered downsampled dataset, successfully generates a 3D point cloud. A comparison with the commercially available PIX4Dmapper revealed, that the commercial solution generates 150% more voxels. Furthermore, by reconstructing the point cloud with the high resolution images and finally applying multi-view-stereo for point cloud densification, 950% and 9000% more voxels are generated respectively.
+
+For plant determination, a peak finding algorithm is applied to the point cloud. After filtering the point cloud for outliers, a plane is fitted and plants in respect to the plane searched for. A fixed bounding box is created for each plant. Because of a missing segmentation, the algorithm can not distinguish between plants and surrounding points. Additionally, the fixed-size bounding boxes fail to adapt to plant dimensions, further inducing errors.
 
 ## Future Research
+
+While this paper has provided valuable insights and advancements in the field of 3D reconstruction through incremental SfM, there are several points of improvements, to enhance the 3D reconstruction and also the plant phenotyping itself. The comparison in @sec-results showed, that the commercial solution computes denser point clouds than the open source implementation of the incremental SfM. To improve this, multi-view stereo (MVS) [@bailer2012] and it's refined variation pixelwise view selection for multi-view stereo [@schönberger2016a] could be applied. However it must be noted, that a computation of a denser point cloud has to be viewed critically, as the computational effort rises exponentially with more voxels and thus a tradeoff between the accuracy and computational effort should be analysed [@paulus2019; @li2022].
+
+Another way to improve point clouds while at the same time keeping the required computing power low, is to incorporate a RTK-GNSS signal, which provides spatial information about a taken image. Taking the location data into account, a stereo matching and reconstruction can be done through calculating the baseline of two images from the location data, after each acquired image. With this approach a realtime reconstruction on the fly can be achieved [@hasheminasab2020; @matsuura2023]. To work out a more accurate location of each image, and thus a higher accuracy baseline, ground control points (GPC) either as physical markers in the field or through feature matching should be investigated. Through the alignment of each new image, the accuracy of the position and thereby of the baseline, and finally the stereo matching, can be improved [@feng2023].
+
+Recently 3D reconstruction through deep learning approaches like NeRF [@gao], which is already used in the agricultural domain in the form of Zero NeRF [@peat2022], or gaussian splatting [@kerbl] have gained considerable attention for its ability to capture detailed spatial information in submilimeter accuracy from 2D images.
+
+After retrieving a sufficient 3D point cloud of a plant, different approaches for phenotyping of plants should be looked into. For growth analysis, the measurement of plant heights can be done through disparity maps [@matsuura2023]. In most cases more information about plants, such as width, convex hull, projected leaf area, leaf density, number of leaves, and the respective leaf lengths can be retrieved through deep learning segmentation. Through repeated acquisition over time, a time variable can be induced and thus a growth model is retrieved [@paulus2019; @li2022]. Fruthermore, incorporation of multispectra cameras can reveal data about the soil, to get a closed model of plants, their surroundings and their interaction [@günder2022].
 
 \newpage
 
