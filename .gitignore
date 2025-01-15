@@ -1,0 +1,10 @@
+
+COSC428_Source/__pycache__/
+
+COSC428_Source/data/reconstruction/
+
+COSC428_Source/colmap/
+
+COSC428_Source/utils/__pycache__/
+*.bkp
+*.dtmp

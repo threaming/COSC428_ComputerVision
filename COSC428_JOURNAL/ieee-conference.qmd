@@ -1,0 +1,286 @@
+---
+title: 3D Point Cloud Reconstruction from UAV Images through Incremental Structure from Motion (SfM) for Plant Phenotyping
+format:
+  ieee-conference-pdf:
+    keep-tex: true
+    output-file: "Andreas Ming_58736084"
+affiliation:
+  ## Author mode :  use one only of the following --- +
+  author-columnar: true # one column per author (using only institution field)
+  # institution-columnar: true # one column per institution (using only institution field)
+  # wide: true # one column wide author/affiliation fields - (using author or author_multiline and institution for mark)
+
+  ## Define institution, and also authors used when `author-columnar: true` or `institution-columnar: true`
+  institution:
+    - name: Lucerne University of Applied Sciences and Arts
+      department: Institute of Electrical Engineering
+      location: Horw, Switzerland
+      mark: 1
+      author:
+        - name: Andreas Ming
+          email: andreas.ming@stud.hslu.ch
+    - name: University of Canterbury
+      department: Department of Computer Science and Software Engineering
+      location: Christchurch, New Zealand
+      mark: 2
+      author:
+        - name: Richard Green
+          email: richard.green@canterbury.ac.nz
+
+#fig-pos: H
+
+abstract: |
+  The paper proposed a method for constructing a 3D point cloud of plants from overhead images taken by a unmanned aerial vehicle (UAV). The structure-from motion (SfM) algorithm constructs a point cloud through SIFT feature extraction, matching, and geometric verifications in correspondence search, and next best view selection, triangulation, local bundle adjustment, retriangulation, observation merging, and global bundle adjustment in a incremental SfM approach. Comparing the algorithm to a commercially available solution, shows that the commercial solution generates 150% more voxels. Furthermore, by reconstructing the point cloud with the high resolution images and finally applying multi-view-stereo (MVS) for point cloud densification, 950% and 9000% more voxels are generated respectively. Future research into incorporation of geolocation data, MVS, and deep learning approaches like neural radiance fields (NeRF) for dense point cloud reconstruction and real-time processing are recommended.
+  
+keywords: [3D reconstruction, phenotyping, structure from motion, incremental structure from motion, point cloud processing]
+bibliography: bibliography.bib
+colorlinks: false
+numbersections: true
+---
+
+# Introduction
+
+To overcome the up to 56% increase in food demand by 2050, serious measures have to be applied, as current crop production is insufficient to lower the risk of hunger. Furthermore, an overall more stable crop production, able to deal with pests, pathogens, heat waves, and other climate change induced weather extremes, must be achieved [@vandijk2021]. A key point of breeding new resilient crops are double haploidy, genomics-assisted breeding, breeding data management, and high-throughput and precise phenotyping [@prasanna2021; @araus2018]. Acquisition of large-scale phenotype data in traditional research is mainly based on manual measurements and thus become a major bottleneck for big-data [@yang2020]. Unmanned areal vehicles (UAV) - drones are used in agriculture for pesticide spraying and crop monitoring. Equipped with various sensors and cameras of different spectra, drones are a useful tool for crop monitoring, either for pesticide spraying, fertiliser estimation, or crop monitoring [@mogili2018].
+
+![Examples of potential applications of field phenotyping with RGB-images. Different phenotyping needs in respect to the corresponding pheneological stage. [@araus2018]](images/pheneostages.jpg){#fig-pheneostages width="8cm" height="11.5cm"}
+
+In plant phenotyping specifically, there is a need in the accurate capture of individual plants, or the recording of individual characteristics depending on the phonological stage of a plant (see @fig-pheneostages) [@araus2018]. Traditionally ground based systems are used for this task, as the environmental variables can be controlled much easier [@yang2020]. If drones could be used instead, this would increase effectiveness and reduce the direct environmental impact, e.g. through ground pressure. Drones seam to be especially useful for this task, based on the low price and ease-of-use [@guo2021]. If needed, drones can be combined with ground robots to capture more data from angles obstructed for the drone (e.g. under the canopy) [@gao2021]. 3D reconstruction is a important part of phenotyping, and if accurate enough, could work as a new base for algorithms to work out other plant details like correlations between biomass and plant constituents [@xiao2020]. Furthermore, with the acquisition of precise 3D models of plants over time, functional structural plant models (FSPMs) can be constructed and conclusions drawn [@soualiou2021].
+
+3D reconstruction through Structure-from-Motion (SfM) is usually featured as lightweight and cheap to implement, as just one or more standard monochrome or colour cameras need to be used to capture the desired images. Furthermore, a complete reconstruction can be done on unstructured images, without the use of references e.g. global navigation satellite system (GNSS). With increasing dataset size a higher resolution can be achieved and SfM algorithms are typically able to provide mm-accuracy [@paulus2019].
+
+# Background {#sec-background}
+
+This section describes the state-of-the-art implementation of SfM for 3D reconstruction and is heavily based on J. Schönebergers [@schönberger2016; @schönberger2016a] work, and the implementation in COLMAPS [@schönberger2024].
+
+SfM is constructing a scene through projections of images taken from different viewpoints. To incorporate a series of images, a sequential processing pipeline with a iterative reconstruction component forms the incremental SfM (see \cref{fig-recons_algo}). [@schönberger2016]
+
+After completing the iterative SfM, we acquired a set of poses $\mathcal{P}$ and reconstructed points $\mathcal{X}$. These points $X_k$ represent the triangulation of matched key points between image pairs.
+
+```{=tex}
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=\textwidth]{images/recons_algo.png}
+\caption{Incremental SfM pipeline (adapted from \autocite{schönberger2016})}
+\label{fig-recons_algo}
+\end{figure*}
+```
+## Correspondence Search
+
+The first stage identifies projections of the same points in overlapping input images (key points) and then outputs a set of geometrically verified image pairs as well as a graph of the image projections for each point. [@schönberger2016]
+
+### Feature Extraction
+
+For each input image $I_i$, sets of local features $\mathcal{F}_i=\{(x_j,f_j)|j=1\dots N_{F_i}\}$ represented as a appearance descriptor $f_j$ at location $x_j\in \mathbb{R}^2$ are processed. To be uniquely recognisable in different images, the features should be invariant under radiometric and geometric changes [@mcglone2004]. Several feature detectors based of Scale Invariant Feature Transform (SIFT) [@lowe1999; @tuytelaars2008] appear to be especially performing in terms of robustness. [@schönberger2016]
+
+### Matching
+
+To work out scene overlaps between images for later triangulation, the features $\mathcal{F}_j$ of all image pairs are tested. It searches for corresponding features by finding the most similar feature in image $I_a$ for each feature in image $I_b$ through the similarity metric $f_j$. The output of this are potential overlapping image pairs $\mathcal{C}=\{I_a,I_b\}$ and their respective feature correspondences $\mathcal{M}_{ab}$.[@schönberger2016]
+
+### Geometric Verification
+
+Since matching is only based on appearance and not location, it can not be guaranteed that the potential image pairs $\mathcal{C}$ are actually overlapping. To verify this, SfM estimates a transformation matrix that maps feature points between images. As a result, a homography $\mathbf{H}$ for planar scenes, a essential matrix $\mathbf{E}$, or a fundamental matrix $\mathbf{F}$ for moving cameras is estimated. Because of heavy outlier-contaminated matching correspondences, robust estimators like RANSAC [@fischler1981] are required. A potential image pair $\mathcal{C}$ becomes a verified image pair $\bar{\mathcal{C}}$ if enough inliers can be described as a fundamental matrix $\mathbf{F}$. Besides the verified image pair $\bar{\mathcal{C}}$, their respective inlier correspondence $\bar{\mathcal{M}}_{ab}$, and a description of their geometric relation $\mathcal{G}_{ab}$ are outputted by this stage. To compute the geometric relation $\mathcal{G}_{ab}$, GRIC [@torr1997] is used as a decision criterion. The output of GRIC is a scene graph with images as nodes and verified pairs of images as edges. [@schönberger2016]
+
+## Incremental Reconstruction
+
+The reconstruction stage computes the pose estimates $\mathcal{P}$ and the reconstructed scene as a set of points $\mathcal{X}$ with $X_k\in\mathbb{R}^3$. For that, the scene graph from the last scene is used and one image after the other is added to the model. In a iterative process, all images are incorporated in the reconstruction of the scene. [@schönberger2016]
+
+### Next Best View Selection
+
+To work out what images to take next, and especially with what pair of images to start with, a robust view selection has to be applied. This is done through a scoring approach which is applied to each image, more precisely to the matching key points of image pairs. More visible points and a more uniform distribution of these points results in a higher score $\mathcal{S}$ (see @fig-BestViewSelection) [@irschara2009]. Because of more points to triangulate, images with a high score are, especially in early iterations, better suited for a robust reconstruction.
+
+![Scores for different number of points (left and right) with different distributions (top and bottom) in the image for $L=3$ [@schönberger2016]](images/BestViewSelection.png){#fig-BestViewSelection width="8.5cm" height="3.3cm"}
+
+Each image is split into a grid of cells which are either *empty* if no point is present, or *full* if one or more points are present. This gives a higher score to equally distributed points. This scheme might not capture distribution well if few partitions are present, as every partition might be activated by a point (e.g. most bottom left configuration in @fig-BestViewSelection). Therefore a multi resolution approach with $l=1\dots L$ levels of partitioning with incrementing resolution $K_l=2^l$ is used. The score is then accumulated over all levels. [@schönberger2016]
+
+### Image Registration
+
+Through the Next Best View Selection approach, we get the image which sees the most triangulated points of the current model. To estimate the pose $\mathbf{P}_c$ of the newly registered image, we further maximise the score and thus the viewable points. This is commonly known as the Perspective-n-Pose (PnP) [@fischler1981] problem. The estimated pose $\mathbf{P}_c$ is then added to the set of poses $\mathcal{P}$. [@schönberger2016]
+
+### Triangulation
+
+With the registered image and the scene graph of the newly present image pairs, further points $X_k$ can be triangulated and added to the scene set $\mathcal{X}$. This point $X_k$ is valid as soon as one or more images covering the scene from a different viewpoint are registered. For multi-view triangulation, and especially handling outlier contamination, RANSAC is used. A feature track $\mathcal{T}$ consisting of normalised image observations $\bar{x}_n\in\mathbb{R}^2$ and a corresponding pose $\mathbf{P}_n$. The goal is then to maximise the support of measurements conforming with a triangulation
+
+$$
+X_{ab}\sim \tau(\bar{x}_a,\bar{x}_b,\mathbf{P}_a,\mathbf{P}_b)\text{ with } a\neq b
+$$
+
+where $\tau$ is the DLT [@hartley2004] triangulation method and $X_{ab}$ the triangulated point. A well-conditioned model satisfies a sufficient triangulation angle $\alpha$ and positive depths $d_{a/b}$ with respect to the image poses $\mathbf{P}_{a/b}$. [@schönberger2016]
+
+### Local Bundle Adjustment
+
+As image registration and triangulation are separate processes, their outputs are highly correlated. Still there are uncertainties propagating from camera poses to triangulation and similarly the reverse is true. To further suppress such induced errors, we perform bundle adjustment. Because incremental SfM affects models only locally, we only perform a local BA on a set of the most connected images. BA is a iterative process, with the goal to reduce a loss-function, in our case a Cauchy function $\rho_j$. The optimisation is performed through a Ceres Solver [@ceresso]. [@schönberger2016]
+
+### Filtering
+
+After a local BA, observations which do not conform with the model are filtered out. These are characterised through a large reprojection error [@wu2013]. [@schönberger2016]
+
+### Retirangulation
+
+To account for drift effects induced through the local BA, a retriangulation is performed. This helps in improving completeness of reconstruction by continuing tracks of points, that previously might have failed to triangulate. [@schönberger2016]
+
+### Global Bundle Adjustment
+
+After the model has grown by a certain percentage, a global BA is performed, resulting in a amortised linear run-time of SfM. Without this refinement, SfM tend to drift into a non-recoverable state. Similarly, to the local BA, a Cauchy function $\rho_j$ is optimised with the Ceres Solver [@ceresso]. [@schönberger2016]
+
+# Proposed Method
+
+This section describes the proposed method for 3D reconstruction of plants through a UAV for phenotyping. First, the imaging platform, which consists of a drone equipped with a high resolution camera for imaging the plants; second, the computer vision system, which builds a 3D point cloud of the ground and its plants.
+
+## Drone Platform {#sec-drone}
+
+As a basis for SfM reconstruction a series of pictures acquired by a Drone with a built-in synchronised camera and RTK-GNSS System is used, the dataset is publicly available by ref. [@matsuura2023]. The camera and RTK-GNSS are synchronised by a microcomputer on the drone (see \cref{fig-DroneSetup}), while the images and their positions are monitored from the ground base. The RTK-GNSS data is not used for 3D reconstruction in this paper. For evaluation of the algorithm, a fake plant, and three boxes of known size are placed on the ground, one of the boxes with a plant on it. [@matsuura2023]
+
+```{=tex}
+\begin{figure*}[tp]
+\centering
+\subfloat{\includegraphics[width=3in]{images/drone.png}%
+\label{fig-first_drone}}
+\hfil
+\subfloat{\includegraphics[width=3in]{images/testsetup.png}%
+\label{fig-second_drone}}
+\caption{Drone used to acquire the data (left) and the drone in the testing environment (right) \autocite{matsuura2023}}
+\label{fig-DroneSetup}
+\end{figure*}
+```
+Images are captured in a resolution of $5472$ x $3638$ pixels from a height of $10m$ and $20m$ in a overflight configuration. For the further drone specifications, refer to \cref{table_specs}. [@matsuura2023]
+
+```{=tex}
+% ------------- Drone specs table -------------
+\begin{table}
+    \renewcommand{\arraystretch}{1.3}
+    \caption{Drone Specifications \autocite{matsuura2023}}
+    \label{table_specs}
+    \centering
+    \begin{tabular}{|>{\raggedright}p{0.35\linewidth}|p{0.55\linewidth}|}
+        \hline
+        \textbf{Component} & \textbf{Specification}\\
+        \hline
+        Drone Body & GD-X8 V2 (1000 mm)\\
+        \hline
+        Motors & T-motor P60 × 4 \\
+        \hline
+        Flight Controller & CUAV X7 \\
+        \hline
+        GNSS & RTK-GNSS: ZED-F9P module \\
+        \hline
+        Gimbal & GREMSY S1V3 \\
+        \hline
+        Camera & Canon PowerShot G7 X Mark 2 \\
+        \hline
+        Image Resolution & 5472 x 3638\\
+        \hline
+        Micro-computer & JETSON Nano \\
+        \hline
+    \end{tabular}
+\end{table}
+```
+## Computer Vision System
+
+To retrieve a 3D point cloud for phenotyping of plants, we propose the use of a incremental SfM approach as described in @sec-background. Due to computational limits (see \cref{table_system_specs} for system specifications), images are restricted to a resolution of $2472$ x $1648$. A comparison with a commercially available 3D reconstruction tool PIX4Dmapper, utilising the full resolution images, is done. Furthermore, the reconstruction with PIX4Dmapper incorporates multi-view stereo (MVS) to further condense the point cloud.
+
+```{=tex}
+% ------------- System specs table -------------
+\begin{table}
+    \renewcommand{\arraystretch}{1.3}
+    \caption{System Specifications}
+    \label{table_system_specs}
+    \centering
+    \begin{tabular}{|>{\raggedright}p{0.35\linewidth}|p{0.55\linewidth}|}
+        \hline
+        \textbf{Component} & \textbf{Specification}\\
+        \hline
+        OS & Linux Mint 21.1 Cinnamon\\
+        \hline
+        CPU & 12$^{\text{th}}$ Gen Intel Core\texttrademark\space i7-12700x12\\
+        \hline
+        IDE & Visual Studio Code\\
+        \hline
+        Interpreter & Python 3.10.6\\
+        \hline
+        CUDA Support & No\\
+        \hline
+        Image Resolution & 2472 x 1648\\
+        \hline
+        COLMAP Version & 3.9.1\\
+        \hline
+    \end{tabular}
+\end{table}
+```
+# Results {#sec-results}
+
+The reconstruction algorithm is run on a system defined in \cref{table_system_specs}. The algorithm is run on the downsampled dataset acquired with the drone platform described in @sec-drone. All images are collected in one run and than given to the algorithm as a unordered dataset. The algorithm then worked out a 3D point cloud. For comparison, a 3D reconstruction with the commercially available PIX4Dmapper is done on the downsampled and original datasets. Additionally, a densification of the point cloud through MVS is done in PIX4Dmapper on the high resolution data set.
+
+If we compare the number of points in each point cloud in \cref{tab-tool_performance}, it can be observed, that simple incremental SfM produces the least amount of points, whereas PIX4Dmapper works out 150% more points on the same dataset. With a higher resolution the increase grows to 950% and 9000% if MVS is applied.
+
+```{=tex}
+\begin{table}
+    \renewcommand{\arraystretch}{1.3}
+    \caption{Tool Performance}
+    \label{tab-tool_performance}
+    \centering
+    \begin{tabular}{|>{\raggedright}p{0.55\linewidth}|p{0.35\linewidth}|}
+        \hline
+        \textbf{Tool} & \textbf{Reconstructed Points} \\
+        \hline
+        COLMAP (SfM, Low-Res) & 85749 \\
+        \hline
+        PIX4Dmapper (SfM, Low-Res) & 217153 \\
+        \hline
+        PIX4Dmapper (SfM, High-Res) & 901223 \\
+        \hline
+        PIX4Dmapper (SfM+MVS, High-Res) & 7859904 \\
+        \hline
+    \end{tabular}
+\end{table}
+```
+```{=tex}
+\begin{figure*}[tp]
+    \centering
+    \subfloat[]{\includegraphics[width=0.25\textwidth]{images/pcd_clr_colmap.png}%
+    \label{fig-colmap_clr}}
+    \hfil
+    \subfloat[]{\includegraphics[width=0.25\textwidth]{images/pcd_clr_pix4d_ties.png}%
+    \label{fig-pix4d_ties_lowres}}
+    \hfil
+    \subfloat[]{\includegraphics[width=0.25\textwidth]{images/pcd_clr_pix4d_ties.png}%
+    \label{fig-pix4d_ties}}
+    \hfil
+    \subfloat[]{\includegraphics[width=0.25\textwidth]{images/pcd_clr_pix4d_stereo.png}%
+    \label{fig-pix4d_stereo}}
+    \caption{The reconstructed point clouds. In (a) through incremental SfM described in \cref{sec-background}, visualised in Open3D, (b) and (c) are computed with the commercial PIX4Dmapper and shows all triangulated points from matched image features (ties) on a low- and high-resolution dataset, respectively. In (d) MVS is applied in PIX4Dmapper for a denser point cloud.}
+    \label{fig-pclouds}
+\end{figure*}
+```
+To work out the plant heights, a peak finding algorithm is used. For this, the point cloud is filtered for outliers, and a plane is fitted to represent the ground. To find the plants, the point furthest away from the plane is taken, and its surrounding points deleted for the next iteration. This is repeated until the height falls under a certain threshold. As seen in \cref{fig-plants}, bounding boxes are set around each found peak, to visualise the separate plants in the point cloud. It has been identified, that this algorithm can not distinguish between plants, ground, nor different objects, as no segmentation is performed. The algorithm is also incapable of adapting to different plant sizes, as the bounding boxes are a fixed size. Furthermore, fitting the ground to the plane leads to bumps in the ground to be recognised as plants. The plane approximation only works for flat grounds or flat patches in bigger point clouds.
+
+```{=tex}
+\begin{figure*}[tp]
+    \centering
+    \subfloat[]{\includegraphics[width=0.45\textwidth]{images/plants_colmap.png}%
+    \label{fig-plant_colmap}}
+    \hfil
+    \subfloat[]{\includegraphics[width=0.45\textwidth]{images/plants_pix4d.png}%
+    \label{fig-plant_pix4d}}
+    \caption{The found plants represented as red bounding boxes in the point cloud. The colour of each voxel is mapped on the z-coordinate of the respective voxel. (a) is the point cloud acquired through incremental SfM (\cref{fig-colmap_clr}). (b) is the point cloud acquired through MVS in PIX4Dmapper (\cref{fig-pix4d_stereo})}
+    \label{fig-plants}
+\end{figure*}
+```
+# Conclusion
+
+The paper proposed a method for constructing a 3D point cloud of plants from overhead images taken by a UAV. The incremental SfM algorithm, processing the unordered downsampled dataset, successfully generates a 3D point cloud. A comparison with the commercially available PIX4Dmapper revealed, that the commercial solution generates 150% more voxels. Furthermore, by reconstructing the point cloud with the high resolution images, and finally applying multi-view stereo (MVS) for point cloud densification, 950% and 9000% more voxels are generated respectively.
+
+For plant determination, a peak finding algorithm is applied to the point cloud. After filtering the point cloud for outliers, a plane is fitted, and plants in respect to the plane searched for. A fixed bounding box is created for each plant. Because of a missing segmentation, the algorithm can not distinguish between plants and surrounding points. Additionally, the fixed-size bounding boxes fail to adapt to plant dimensions, further inducing errors.
+
+## Future Research
+
+While this paper has provided valuable insights and advancements in the field of 3D reconstruction through incremental SfM, there are several points of improvements to enhance the 3D reconstruction and the plant phenotyping itself. The comparison in @sec-results showed, that the commercial solution computes denser point clouds than the open source implementation of the incremental SfM. To improve this, multi-view stereo (MVS) [@bailer2012] and it's refined variation pixelwise view selection for multi-view stereo [@schönberger2016a] could be applied. However it must be noted, that a computation of a denser point cloud has to be viewed critically, as the computational effort rises exponentially with more voxels and thus a trade-off between the accuracy and computational effort should be analysed [@paulus2019; @li2022].
+
+Another way to improve point clouds while still keeping the required computing power low, is to incorporate a RTK-GNSS signal, which provides spatial information about a taken image. Taking the location data into account, a stereo matching and reconstruction can be done through calculating the baseline of two images from the location data, after each acquired image. With this approach a real-time reconstruction can be achieved [@hasheminasab2020; @matsuura2023]. To work out a more accurate location of each image, and thus a higher accuracy baseline, ground control points (GPC) either as physical markers in the field or through feature matching should be investigated. Through the alignment of each new image, the accuracy of the position, thereby of the baseline and the stereo matching can be improved [@feng2023].
+
+Recently 3D reconstruction through deep learning approaches like neural radiance fields (NeRF) [@gao], which is already used in the agricultural domain in the form of Zero NeRF [@peat2022], or Gaussian splatting [@kerbl] have gained considerable attention for its ability to capture detailed spatial information in submillimeter accuracy from 2D images.
+
+After retrieving a sufficient 3D point cloud of a plant, different approaches for phenotyping of plants should be looked into. For growth analysis, the measurement of plant heights can be done through disparity maps [@matsuura2023]. In most cases, more information about plants, such as width, convex hull, projected leaf area, leaf density, number of leaves, and the respective leaf lengths can be retrieved through deep learning segmentation. Through repeated acquisition over time, a time variable can be induced and thus a functional structural plant model is retrieved [@paulus2019; @li2022; @soualiou2021].
+
+\newpage
+
+# References {#references .numbered}
