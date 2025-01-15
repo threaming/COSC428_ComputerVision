@@ -11,9 +11,9 @@ This repository contains code for a incremental SfM, to reconstruct a point clou
 
 ## 📒 Journal:
 
-The project is documented in the form of a journal entry. The full document can be found [here](COSC428_JOURNAL/CV_3Dreconstruction_journal.pdf).
+The project is documented in the form of a journal entry. The full document can be found [here](COSC428_Journal/CV_3Dreconstruction_journal.pdf).
 
-![](COSC428_SOURCE/images/journal_preview.png)
+![](COSC428_Source/images/journal_preview.png)
 
 ## 💾 Data:
 
