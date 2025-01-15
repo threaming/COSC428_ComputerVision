@@ -6,8 +6,14 @@ This repository contains code for a incremental SfM, to reconstruct a point clou
 
 |                           |                                      |                              |
 |:------------------------:|:---------------------:|:---------------------:|
-| ![](images/testsetup.png) | ![](images/pcd_clr_pix4d_stereo.png) | ![](images/plants_pix4d.png) |
+| ![](COSC428_Source/images/testsetup.png) | ![](COSC428_Source/images/pcd_clr_pix4d_stereo.png) | ![](COSC428_Source/images/plants_pix4d.png) |
 |        Input scene        |       Pointcloud (PIX4Dmapper)       |     Plant bounding boxes     |
+
+## 📒 Journal:
+
+The project is documented in the form of a journal entry. The full document can be found [here](COSC428_JOURNAL/CV_3Dreconstruction_journal.pdf).
+
+![](COSC428_SOURCE/images/journal_preview.png)
 
 ## 💾 Data:
 
